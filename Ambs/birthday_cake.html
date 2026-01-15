@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday Amberly!</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    background-color: #fdf5e6; /* Off-White */
+    overflow: hidden;
+    margin: 0;
+    font-family: 'Brush Script MT', cursive;
+  }
+
+  /* --- WELCOME OVERLAY (To handle the click) --- */
+  #overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fdf5e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+  }
+
+  #startBtn {
+    padding: 20px 40px;
+    background: #800000; /* Maroon */
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 24px;
+    cursor: pointer;
+    font-family: 'Brush Script MT', cursive;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+  }
+  
+  #startBtn:hover {
+    transform: scale(1.05);
+  }
+
+  /* --- THE LINK BUTTON (Appears after blowing) --- */
+  #goBtn {
+    margin-top: 150px;
+    padding: 15px 40px;
+    background-color: #800000; /* Maroon */
+    color: white;
+    text-decoration: none;
+    font-size: 30px;
+    border-radius: 50px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease, transform 0.2s;
+    z-index: 10;
+  }
+  
+  #goBtn:hover {
+    transform: scale(1.05);
+    background-color: #600000;
+  }
+
+  #goBtn.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  /* --- CAKE STYLES --- */
+  #birthday-cake {
+    position: relative;
+    top: 50px;
+    left: 0;
+    user-select: none;
+  }
+
+  #birthday-cake:before {
+    content: "";
+    position: absolute;
+    background-color: #ddd;
+    width: 400px;
+    height: 140px;
+    border-radius: 50%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -10%);
+    box-shadow: inset -2px -5px #ccc;
+  }
+
+  .cake {
+    position: absolute;
+    background-color: #fff;
+    width: 350px;
+    height: 130px;
+    transform: translate(-50%, -60%);
+  }
+
+  .cake:before, .cake:after {
+    content: "";
+    position: absolute;
+  }
+
+  .cake:before, .middle, .middle:before {
+    border-radius: 50% 50% 50% 50% / 0% 0% 100% 100%;
+    width: 350px;
+    height: 50px;
+  }
+
+  .cake:before {
+    background-color: #fff;
+    top: 130px;
+  }
+
+  .cake:after {
+    background-color: #f0f0f0;
+    width: 350px;
+    height: 30px;
+    top: 50px;
+  }
+
+  .middle {
+    position: absolute;
+    background-color: #f0f0f0;
+    top: 80px;
+    z-index: 1;
+  }
+
+  .middle:before {
+    content: "";
+    position: absolute;
+    background-color: #fff;
+    top: -35px;
+  }
+
+  .top {
+    position: absolute;
+    background-color: #d32f2f;
+    width: 350px;
+    height: 90px;
+    border-radius: 50%;
+    z-index: 2;
+    top: -45px;
+    box-shadow: inset -5px -1px #fff, inset -70px 2px rgba(255, 255, 255, .1);
+  }
+
+  .chocs {
+    position: absolute;
+    width: 55px;
+    height: 50px;
+    background-color: #d32f2f;
+    top: 0;
+    z-index: 1;
+    border-radius: 50% 50% 50% 50% / 0% 0% 100% 100%;
+    box-shadow: 
+      49px 20px #d32f2f, 98px 25px #d32f2f, 147px 30px #d32f2f, 
+      196px 25px #d32f2f, 245px 20px #d32f2f, 295px 0 #d32f2f, 
+      0px 4px #fff, 49px 24px #fff, 98px 29px #fff, 147px 34px #fff, 
+      196px 29px #fff, 245px 24px #fff, 295px 4px #fff;
+  }
+
+  .chocs:before {
+    content: "";
+    position: absolute;
+    width: 175px;
+    height: 180px;
+    background-color: rgba(255, 255, 255, .1);
+    border-radius: 100% 0% 100% 0% / 0% 72% 28% 100%;
+    left: 175px;
+    top: 0;
+  }
+
+  /* --- CANDLES --- */
+  .candles {
+    position: absolute;
+    width: 30px;
+    height: 80px;
+    background-color: #ff69b4;
+    top: -160px;
+    left: -20px;
+    box-shadow: 50px 20px #ff69b4, -50px 20px #ff69b4;
+  }
+
+  .candles:before {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 10px;
+    background-color: #ff69b4;
+    border-radius: 50%;
+    top: -5px;
+    box-shadow: 
+      0 80px #ff69b4, -50px 20px #ff69b4, -50px 100px #ff69b4, 
+      50px 20px #ff69b4, 50px 100px #ff69b4, inset 2px -1px #fff;
+  }
+
+  .candles:after {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 10px;
+    border-radius: 50%;
+    top: 15px;
+    left: 50px;
+    box-shadow: inset 2px -1px #fff;
+  }
+
+  .shadows {
+    position: absolute;
+    width: 30px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: inset 2px -1px #fff;
+    left: -50px;
+    top: 15px;
+  }
+
+  .shadows:before {
+    content: "";
+    position: absolute;
+    background-color: #333;
+    width: 1.5px;
+    height: 15px;
+    left: 14.5px;
+    top: -10px;
+    box-shadow: 50px -20px #333, 100px 0 #333;
+  }
+
+  .shadows:after {
+    content: "";
+    position: absolute;
+    width: 15px;
+    height: 90px;
+    left: 15px;
+    background-color: rgba(255, 255, 255, .1);
+    box-shadow: 50px -20px rgba(255, 255, 255, .1), 100px 0 rgba(255, 255, 255, .1);
+    border-radius: 0% 100% 50% 50% / 100% 6% 10% 0%;
+  }
+
+  /* --- FLAMES --- */
+  .flame, .flame:before, .flame2, .flame2:before, .flame3, .flame3:before {
+    position: absolute;
+    border-radius: 80% 15% 55% 50% / 55% 15% 80% 50%;
+  }
+
+  .flame, .flame3, .flame2 {
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    transform: rotate(-45deg);
+    z-index: 4;
+    background-color: rgba(252, 191, 73, .8);
+    transition: 0.5s;
+    animation: flame 0.5s infinite;
+    opacity: 1;
+  }
+
+  .flame { top: -40px; }
+  .flame2, .flame3 { top: -20px; }
+  .flame2 { left: -50px; }
+  .flame3 { left: 50px; }
+
+  .flame:before, .flame2:before, .flame3:before {
+    content: "";
+    background-color: rgba(247, 127, 0, .4);
+    width: 20px;
+    height: 20px;
+    top: 5px;
+    left: 5px;
+  }
+
+  @keyframes flame {
+    0%, 25%, 100% { transform: scaleY(1) rotate(-45deg); }
+    50%, 75% { transform: scaleY(1.1) rotate(-45deg); }
+  }
+
+  .text, .text2 {
+    position: absolute;
+    color: #800000; /* Maroon */
+
+    text-align: center;
+  }
+
+  .text {
+    width: 500px;
+    font-size: 50px;
+    left: -210px;
+    top: 80px;
+    z-index: -1;
+    transition: 0.3s;
+    opacity: 0;
+  }
+
+  .text2 {
+    font-size: 25px;
+    font-family:'Times New Roman', Times, serif;
+    width: 300px;
+    top: 105px;
+    left: -140px;
+  }
+
+  /* --- Logic Class: Extinguish --- */
+  .out .flame, .out .flame2, .out .flame3 {
+    opacity: 0 !important;
+  }
+  
+  .out .text {
+    opacity: 1 !important;
+    top: -90px !important;
+  }
+  
+  .out .text2 {
+    opacity: 0;
+  }
+</style>
+</head>
+<body>
+
+<div id="overlay">
+    <button id="startBtn">Click to Open Surprise ✨</button>
+</div>
+
+<div id="birthday-cake">
+  <div class="cake">
+    <div class="middle"></div>
+    <div class="chocs"></div>
+    <div class="top"></div>
+  </div>
+  <div class="candles">
+    <div class="flame"></div>
+    <div class="flame2"></div>
+    <div class="flame3"></div>
+    <div class="text">Happy Birthday Amberly!</div>
+    <div class="shadows"></div>
+  </div>
+  <p class="text2">Blow on your screen!</p>
+</div>
+
+<a id="goBtn" href="gossip_girl.html">Let's Go -></a>
+
+<script>
+  const startBtn = document.getElementById('startBtn');
+  const overlay = document.getElementById('overlay');
+  const cakeContainer = document.getElementById('birthday-cake');
+  const goBtn = document.getElementById('goBtn');
+  
+  let audioContext;
+  let analyser;
+  let microphone;
+
+  startBtn.addEventListener('click', async () => {
+    try {
+      // 1. Initialize Audio Context (Needs user gesture)
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // 2. Request Mic
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // 3. Remove Overlay (Make it look seamless)
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 500);
+
+      // 4. Setup Analysis
+      analyser = audioContext.createAnalyser();
+      microphone = audioContext.createMediaStreamSource(stream);
+      microphone.connect(analyser);
+
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function detectBlow() {
+        requestAnimationFrame(detectBlow);
+        analyser.getByteFrequencyData(dataArray);
+
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+        }
+        let average = sum / bufferLength;
+
+        // Sensitivity: 30
+        if (average > 30) { 
+          blowOutCandles();
+        }
+      }
+
+      detectBlow();
+
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      // Fallback if they say no
+      startBtn.textContent = "Please allow Mic access to blow candles!";
+      startBtn.style.backgroundColor = "red";
+    }
+  });
+
+  function blowOutCandles() {
+    if (!cakeContainer.classList.contains('out')) {
+      cakeContainer.classList.add('out');
+      
+      // Confetti
+      confetti({ particleCount: 550, spread: 150, origin: { y: 0.6 } });
+      setTimeout(() => {
+          confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 } });
+      }, 250);
+
+      // Reveal Go Button after 1 second
+      setTimeout(() => {
+        goBtn.classList.add('visible');
+      }, 1000);
+    }
+  }
+</script>
+
+</body>
+</html>

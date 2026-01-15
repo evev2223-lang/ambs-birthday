@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surprise!</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: white;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Cormorant Garamond', serif;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- CORNER IMAGES (Single, Bigger) --- */
+        .corner-img {
+            position: absolute;
+            width: 160px; /* Bigger size as requested */
+            height: 160px;
+            object-fit: contain;
+            opacity: 0.9;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* Positions */
+        .tl { top: 10px; left: 10px; }
+        .tr { top: 10px; right: 10px; }
+        .bl { bottom: 10px; left:10px; }
+        .br { bottom: 10px; right: 10px; }
+
+        /* --- 1. THE MAIN HEADER IMAGE --- */
+        .main-image {
+            margin-top: 20px;
+            width: 80vw;
+            max-height: 60vh; /* Reduced slightly to make room */
+            width: 760px;
+            object-fit: contain;
+            z-index: 10;
+        }
+
+        /* --- 2. GIFT CONTAINER --- */
+        .gift-row {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px; /* Reduced margin to bring closer to image */
+            width: 100%;
+            flex-wrap: wrap;
+            padding-bottom: 50px;
+            z-index: 10;
+        }
+
+        /* --- 3. THE GIFT BOX WRAPPER --- */
+        .gift-container {
+            position: relative;
+            width: 130px; /* Slightly wider to accommodate new bows */
+            height: 120px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .gift-container:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- BOX PARTS --- */
+
+        /* The Box Base */
+        .box-base {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 85%;
+            background-color: #8B1538; /* Maroon */
+            border-radius: 0 0 5px 5px;
+            z-index: 1;
+        }
+
+        /* The Box Lid */
+        .box-lid {
+            position: absolute;
+            top: 0;
+            left: -5%;
+            width: 110%;
+            height: 20%;
+            background-color: #a52a4d; /* Lighter Maroon */
+            border-radius: 3px;
+            z-index: 2;
+            transition: all 0.5s ease;
+            box-shadow: 0 4px 5px rgba(0,0,0,0.2);
+        }
+
+        /* The Vertical Ribbon (On Lid and Base) */
+        .ribbon-vertical {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 100%;
+            background-color: #ff69b4; /* Pink */
+        }
+
+        /* --- THE REALISTIC BOW CSS --- */
+        
+        .bow-container {
+            position: absolute;
+            top: -25px; /* Sit on top of lid */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 40px;
+            z-index: 4; /* Highest priority */
+            transition: all 0.5s ease; /* Animate with lid */
+        }
+
+        /* The Center Knot */
+        .bow-knot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            background-color: #e05297; /* Darker pink for depth */
+            border-radius: 4px;
+            z-index: 5;
+        }
+
+        /* The Loops (Left and Right) */
+        .bow-loops {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bow-loops::before, .bow-loops::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            width: 30px;
+            height: 30px;
+            background-color: #4a0626;
+            outline: 1px solid rgba(68, 4, 40, 0.629);
+            border-radius: 20% 50% 20% 50% ;
+
+            z-index: 3;
+        }
+
+        .bow-loops::before {
+            left: 10px;
+            transform: rotate(45deg); /* Point inward */
+            background: linear-gradient(45deg, #ff69b4 60%, #ff8cc6 100%); /* Slight shine */
+        }
+
+        .bow-loops::after {
+            right: 10px;
+            transform: rotate(-135deg); /* Point inward */
+            background: linear-gradient(-45deg, #ff69b4 60%, #ff8cc6 100%);
+        }
+
+        /* The Tails (Hanging down) */
+        .bow-tails {
+            position: absolute;
+            bottom: -5px; /* Hang below the knot */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 10px;
+            z-index: 1; /* Behind the loops */
+        }
+
+        .bow-tails::before, .bow-tails::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            width: 15px;
+            height: 35px;
+            background-color: #ff69b4;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
+            filter: drop-shadow(0 0 0.8px #c0438f);
+        }
+
+        .bow-tails::before {
+            left: 15px;
+            transform: rotate(20deg);
+            /* Swallowtail cut at bottom */
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
+        }
+
+        .bow-tails::after {
+            right: 15px;
+            transform: rotate(-20deg);
+            /* Swallowtail cut at bottom */
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 85%, 0 100%);
+            box-shadow:
+            0 0 0 1.5px rgba(150, 0, 80, 0.5),
+            0 4px 6px rgba(0, 0, 0, 0.15);
+
+        }
+
+
+        /* --- 4. THE REVEAL CARD (Modified: No Container Styles) --- */
+        .gift-reveal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.5);
+            pointer-events: none;
+            transition: all 0.5s ease;
+            z-index: 10;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .gift-reveal img {
+            width: 150px; /* Slightly bigger to pop out */
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 25px;
+        }
+
+        .gift-reveal h3 {
+            margin: 0;
+            color: #8B1538;
+            font-size: 16px; /* Slightly bigger text */
+            text-align: center;
+            line-height: 1.1;
+            text-shadow: 0 2px 5px rgba(255, 255, 255, 0.8); /* Added shadow to ensure readability */
+        }
+
+        /* --- ANIMATION STATES --- */
+        
+        /* 1. Hide the box base */
+        .gift-container.open .box-base {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* 2. Fly the lid AND the bow away */
+        .gift-container.open .box-lid {
+            transform: translateY(-60px) rotate(-10deg);
+            opacity: 0;
+        }
+        
+        .gift-container.open .bow-container {
+            /* Moves exactly with the lid */
+            transform: translate(-50%, -60px) rotate(-10deg); 
+            opacity: 0;
+        }
+
+        /* 3. Show the reveal card */
+        .gift-container.open .gift-reveal {
+            opacity: 1;
+            transform: scale(1.2); /* Scale up larger since there is no box */
+            pointer-events: auto;
+        }
+
+    </style>
+</head>
+<body>
+
+    <img src="b.png" alt="Decoration" class="corner-img tl">
+    
+    <img src="b.png" alt="Decoration" class="corner-img tr">
+    
+    <img src="b.png" alt="Decoration" class="corner-img bl">
+    
+    <img src="b.png" alt="Decoration" class="corner-img br">
+
+    <img src="aaa.png" alt="Surprise Header" class="main-image">
+
+    <div class="gift-row">
+
+        <div class="gift-container" onclick="openGift(this)">
+            <div class="bow-container">
+                <div class="bow-loops"></div>
+                <div class="bow-knot"></div>
+                <div class="bow-tails"></div>
+            </div>
+
+            <div class="box-lid">
+                <div class="ribbon-vertical"></div>
+            </div>
+            
+            <div class="box-base">
+                <div class="ribbon-vertical"></div>
+            </div>
+
+            <div class="gift-reveal">
+                <img src="h.jpeg" alt="Hugs">
+                <h3>Infinite Love</h3>
+            </div>
+        </div>
+
+        <div class="gift-container" onclick="openGift(this)">
+            <div class="bow-container">
+                <div class="bow-loops"></div>
+                <div class="bow-knot"></div>
+                <div class="bow-tails"></div>
+            </div>
+
+            <div class="box-lid">
+                <div class="ribbon-vertical"></div>
+            </div>
+            
+            <div class="box-base">
+                <div class="ribbon-vertical"></div>
+            </div>
+
+            <div class="gift-reveal">
+                <img src="f.jpeg" alt="Flowers">
+                <h3>Bouquet</h3>
+            </div>
+        </div>
+
+        <div class="gift-container" onclick="openGift(this)">
+            <div class="bow-container">
+                <div class="bow-loops"></div>
+                <div class="bow-knot"></div>
+                <div class="bow-tails"></div>
+            </div>
+
+            <div class="box-lid">
+                <div class="ribbon-vertical"></div>
+            </div>
+            
+            <div class="box-base">
+                <div class="ribbon-vertical"></div>
+            </div>
+
+            <div class="gift-reveal">
+                <img src="c.png" alt="Yap">
+                <h3>Unlimited Yap Session</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function openGift(element) {
+            // Prevent re-clicking if already open
+            if(element.classList.contains('open')) return;
+
+            // 1. Add class to animate
+            element.classList.add('open');
+
+            // 2. Trigger Confetti
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ['#8B1538', '#ff69b4', '#ffffff'] // Maroon, Pink, White
+            });
+        }
+    </script>
+
+</body>
+</html>
